@@ -52,6 +52,7 @@ class Game extends React.Component {
         squares: Array(9).fill(null),
       }],
       nextX: true,
+      stepNumber: 0
     };
   }
 
@@ -77,18 +78,34 @@ class Game extends React.Component {
 
   handleClick(i) {
     const history = this.state.history.slice();
-    const squares = history[history.length - 1].squares.slice();
+    const squares = history[this.state.stepNumber].squares.slice();
     if (this.calculateWinner(squares) || squares[i]) return;
     squares[i] = this.state.nextX ? 'X' : 'O';
     history.push({squares});
-    this.setState({history: history, nextX: !this.state.nextX});
+    this.setState({history: history, nextX: !this.state.nextX, stepNumber: history.length - 1});
+  }
+
+  jumpTo(step) {
+    this.setState({
+      stepNumber: step,
+      nextX: (step % 2) === 0
+    });
   }
 
   render() {
     const history = this.state.history;
-    const current = history[history.length - 1];
+    const step = this.state.stepNumber;
+    const current = history[step];
     const squares = current.squares;
     const winner  = this.calculateWinner(squares);
+    let moves = history.map((step, move) => {
+      const des = move ? `Go to Move #${move}` : 'Go to Game Start';
+      return (
+        <li key={move}>
+          <button onClick={() => { this.jumpTo(move); }}>{des}</button>
+        </li>
+      );
+    });
     let status = `${this.state.nextX ? 'X': 'O'} your turn!`;
     if (winner) {
       status = `${winner} is the winner! :D`
@@ -100,7 +117,7 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div className="status">{status}</div>
-          <ol>{/* TODO */}</ol>
+          <ol>{moves}</ol>
         </div>
       </div>
     );
